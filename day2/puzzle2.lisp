@@ -36,15 +36,14 @@
     (let ((instruction-string (               nth 0 (uiop:split-string instruction :separator " ")))
 	  (instruction-count  (parse-integer (nth 1 (uiop:split-string instruction :separator " ")))))
 
-      ; forward adds x to horizontal-position
-      ; down adds x to depth
-      ; up subtracts x from depth
-      ; `cond` might be a better fit here: http://clhs.lisp.se/Body/m_cond.htm
-      (if (search "forward" instruction-string)(incf horizontal-position instruction-count)
-        (if (search "down" instruction-string) (incf depth               instruction-count)
-          (if (search "up" instruction-string) (decf depth               instruction-count))))))
+            ; forward adds x to horizontal-position
+      (cond ((search "forward" instruction-string)(incf horizontal-position instruction-count))
+            ; down adds x to depth
+	    ((search "down"    instruction-string)(incf depth               instruction-count))
+            ; up subtracts x from depth
+	    ((search "up"      instruction-string)(decf depth               instruction-count)))))
 
-      (format T "First calculation :: ~d" (* horizontal-position depth))(terpri))
+  (format T "First calculation :: ~d" (* horizontal-position depth))(terpri))
 
 
 ; part 2
@@ -57,20 +56,15 @@
 	(let ((instruction-string (               nth 0 (uiop:split-string instruction :separator " ")))
 	      (instruction-count  (parse-integer (nth 1 (uiop:split-string instruction :separator " ")))))
 
-	  ; down and up only adjust aim
-	  (if (search "down" instruction-string)(incf aim instruction-count)
-	    (if (search "up" instruction-string)(decf aim instruction-count)
-	      ; forward does two things:
-	      (if (search "forward" instruction-string)
-		(progn
-		  ; increase horizontal-position
-		  (incf horizontal-position instruction-count)
-		  ; adjust depth based on aim and forward distance
-		  ; I could also use incf or decf here - they accept positive
-		  ; and negative numbers - but I think setf is clearer. 
-		  (setf depth (+ depth (* instruction-count aim)))))))))
+	        ; down and up only adjust aim
+	  (cond ((search "down"    instruction-string)(incf aim instruction-count))
+		((search "up"      instruction-string)(decf aim instruction-count))
+		; forward adds x to horizontal-position AND adjusts depth
+		((search "forward" instruction-string)
+		     (incf horizontal-position instruction-count)
+		     (setf depth (+ depth (* instruction-count aim)))))))
 
-	(format T "Second calculation :: ~d" (* horizontal-position depth))(terpri))
+  (format T "Second calculation :: ~d" (* horizontal-position depth))(terpri))
 
 
 
