@@ -1,18 +1,28 @@
-; https://stackoverflow.com/questions/13359025/adding-to-the-end-of-list-in-lisp
-; has some discussion on how these operators work
+; First, read in the file. 
+; 
+; I had previously been using a concoction with open, push, cdr, and last
+; to gather the input values and append them to the depth-measurements list. 
+; 
+; This is a shorter way of reading a file into a list. Some notes:
+;  - `with-open-file` is a CL macro, http://clhs.lisp.se/Body/m_w_open.htm
+;    It uses `open` under the hood, and returns whatever we `collect`. 
+;  - stream is a variable named stream, that is also a stream object
+;  - collect is one of several accumulators, special loop clauses built
+;    specifically for gathering values in a loop (that we later return) - see
+;    https://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node246.html
+;  - I don't have to specifically create a list to append values to, so I 
+;    don't have to go back later to pop the first `nil` off the list. The
+;    list I want is created as a return value from `with-open-file`. 
+(defvar depth-measurements)
 (set 'depth-measurements
-     ; I want to run many commands, and return the result of the first one (dm)
-     (prog1
-       (set 'dm (list()))
-       (set 'infile (open "puzzle1.input"))
-         (when infile
-	   (loop for line = (read-line infile nil)
-		 while line do (push (parse-integer line) (cdr (last dm)))))))
+  (with-open-file (stream "puzzle1.input")  
+    (loop for line = (read-line stream nil)
+      while line
+      collect (parse-integer line))))
+; Also note that we `defvar` before `set`. SBCL throws warnings for undefined
+; variables, and other Common Lisp implementations may throw errors or cause
+; undefined behavior. 
 
-; I created depth-measurements as list(), AKA nil. I created the list of measurements
-; by appending each line of input, so we still need to remove the first element (nil)
-; from the list. 
-(set 'depth-measurements (remove (nth 0 depth-measurements) depth-measurements))
 
 ; We need to track the number of measurement increases. 
 (set 'measurement-increase-count 0)
