@@ -3,12 +3,23 @@
 ; I arrived at this and `uiop:split-string` after some trial and error.
 (require "asdf")
 
+; Utility - both parts need to parse individual space-separated instructions.
+; I originally had both parts iterating through all instructions and doing the
+; parsing on their own, but it makes more sense to parse the file while we're
+; reading it in. 
+; https://stackoverflow.com/questions/37639171/how-to-handle-multiple-returns-in-common-lisp/37639240
+(defun parse-instruction (instruction)
+  (let ((instruction-list (uiop:split-string instruction :separator " ")))
+    (list 
+      (nth 0 instruction-list)
+      (parse-integer (nth 1 instruction-list)))))
+
 (defvar instructions)
 (set 'instructions
   (with-open-file (stream "puzzle2.input")
     (loop for line = (read-line stream nil)
       while line
-      collect line)))
+      collect (parse-instruction line))))
 
 ; part 1
 ; I was previously defining and setting horizontal-position and depth outside
@@ -30,50 +41,42 @@
 ; So, I guess I could have changed my `set` calls to `setf` calls, but the new
 ; implementation with incf/decf is cleaner anyway. 
 
-; Utility - both parts need to parse individual space-separated instructions.
-; this will return a list with two values, which are meant to be consumed by
-; destructuring-bind. For more on this, see:
-; https://stackoverflow.com/questions/37639171/how-to-handle-multiple-returns-in-common-lisp/37639240
-(defun parse-instruction (instruction)
-  (let ((instruction-list (uiop:split-string instruction :separator " ")))
-    (list 
-      (nth 0 instruction-list)
-      (parse-integer (nth 1 instruction-list)))))
-    
 
-(let ((horizontal-position 0)
-      (depth 0))
+; set variables for both part 1 and part 2, so we only iterate once. 
+;       part 1
+(let ((horizontal-position-1 0)
+      (depth-1 0)
+      ; part 2
+      (horizontal-position-2 0)
+      (depth-2 0)
+      (aim-2 0))
 
   (loop for instruction in instructions do
-    ; parse out the name of the instruction, and velocity
-    (destructuring-bind (instruction-string instruction-count) (parse-instruction instruction)
+    ; parse out the name and velocity of the instruction
+    (let ((instruction-string (nth 0 instruction))
+	  (instruction-count  (nth 1 instruction)))
 
-            ; forward adds x to horizontal-position
-      (cond ((search "forward" instruction-string)(incf horizontal-position instruction-count))
-            ; down adds x to depth
-	    ((search "down"    instruction-string)(incf depth               instruction-count))
-            ; up subtracts x from depth
-	    ((search "up"      instruction-string)(decf depth               instruction-count)))))
+      ; TODO: Can we do further parsing when reading in the file, and just use f/d/u?
+      ; We really just need the first and last characters of each line. 
+      (cond ((string= "f" (schar instruction-string 0))
+	       ; part one :: add x to horizontal-position
+	       (incf horizontal-position-1 instruction-count)
+	       ; part two :: add x to horizontal-position, and adjust depth
+	       (incf horizontal-position-2 instruction-count)
+	       (setf depth-2 (+ depth-2 (* instruction-count aim-2))))
 
-  (format T "First calculation :: ~d" (* horizontal-position depth))(terpri))
+	    ((string= "d" (schar instruction-string 0))
+	       ; part one :: adjust depth (increasing)
+	       (incf depth-1 instruction-count)
+	       ; part two :: adjust aim (increasing)
+	       (incf aim-2 instruction-count))
 
+	    ((string= "u" (schar instruction-string 0))
+               ; part one :: adjust depth (decreasing)
+	       (decf depth-1               instruction-count)
+	       ; part two :: adjust aim (decreasing)
+	       (decf aim-2 instruction-count)))))
 
-; part 2
-(let ((horizontal-position 0)
-      (depth 0)
-      (aim 0))
-
-  (loop for instruction in instructions do
-	; parse out the name of the instruction, and velocity
-	(destructuring-bind (instruction-string instruction-count) (parse-instruction instruction)
-
-	        ; down and up only adjust aim
-	  (cond ((search "down"    instruction-string)(incf aim instruction-count))
-		((search "up"      instruction-string)(decf aim instruction-count))
-		; forward adds x to horizontal-position AND adjusts depth
-		((search "forward" instruction-string)
-		     (incf horizontal-position instruction-count)
-		     (setf depth (+ depth (* instruction-count aim)))))))
-
-  (format T "Second calculation :: ~d" (* horizontal-position depth))(terpri))
+  (format T "First calculation :: ~d" (* horizontal-position-1 depth-1))(terpri)
+  (format T "Second calculation :: ~d" (* horizontal-position-2 depth-2))(terpri))
 
