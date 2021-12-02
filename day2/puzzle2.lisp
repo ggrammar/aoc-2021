@@ -29,12 +29,24 @@
 ;     place can be changed by using setf. 
 ; So, I guess I could have changed my `set` calls to `setf` calls, but the new
 ; implementation with incf/decf is cleaner anyway. 
+
+; Utility - both parts need to parse individual space-separated instructions.
+; this will return a list with two values, which are meant to be consumed by
+; destructuring-bind. For more on this, see:
+; https://stackoverflow.com/questions/37639171/how-to-handle-multiple-returns-in-common-lisp/37639240
+(defun parse-instruction (instruction)
+  (let ((instruction-list (uiop:split-string instruction :separator " ")))
+    (list 
+      (nth 0 instruction-list)
+      (parse-integer (nth 1 instruction-list)))))
+    
+
 (let ((horizontal-position 0)
       (depth 0))
+
   (loop for instruction in instructions do
     ; parse out the name of the instruction, and velocity
-    (let ((instruction-string (               nth 0 (uiop:split-string instruction :separator " ")))
-	  (instruction-count  (parse-integer (nth 1 (uiop:split-string instruction :separator " ")))))
+    (destructuring-bind (instruction-string instruction-count) (parse-instruction instruction)
 
             ; forward adds x to horizontal-position
       (cond ((search "forward" instruction-string)(incf horizontal-position instruction-count))
@@ -53,8 +65,7 @@
 
   (loop for instruction in instructions do
 	; parse out the name of the instruction, and velocity
-	(let ((instruction-string (               nth 0 (uiop:split-string instruction :separator " ")))
-	      (instruction-count  (parse-integer (nth 1 (uiop:split-string instruction :separator " ")))))
+	(destructuring-bind (instruction-string instruction-count) (parse-instruction instruction)
 
 	        ; down and up only adjust aim
 	  (cond ((search "down"    instruction-string)(incf aim instruction-count))
@@ -65,8 +76,4 @@
 		     (setf depth (+ depth (* instruction-count aim)))))))
 
   (format T "Second calculation :: ~d" (* horizontal-position depth))(terpri))
-
-
-
-
 
