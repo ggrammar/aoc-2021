@@ -16,26 +16,16 @@
 
 ; We need to track the number of measurement increases. 
 (set 'measurement-increase-count 0)
+(set 'previous-measurement 0)
 
 (loop for measurement in depth-measurements do
 
       ; skip the first element. this may not correctly handle the situation where
       ; a future measurement is the same as the first measurement, depending on how
       ; the lisp handles equality
-      ; (if (eq measurement (nth 0 depth-measurements))
-	; (progn
-	  ; (format T "this is the first measurement, so we skip comparison")(terpri))
-
-	;(if (> measurement previous-measurement)
-	  ;(progn
-	    ;(format T "measurement ~d > previous-measurement ~d" measurement previous-measurement)
-	    ;(terpri)
-	    ;(set 'measurement-increase-count (+ measurement-increase-count 1)))
-	  ;(progn
-	    ;(format T "measurement ~d =< previous-measurement ~d" measurement previous-measurement)
-	    ;(terpri))
-	;)
-      ;)
+      (if (eq measurement (nth 0 depth-measurements))() ;do nothing
+	(if (> measurement previous-measurement)
+	  (set 'measurement-increase-count (+ measurement-increase-count 1))))
 
       ; save this element for future processing
       (set 'previous-measurement measurement)
@@ -50,40 +40,31 @@
 ;     one of the commands. I suspect there are more "lisp-y" ways of doing the things I 
 ;     want to do, but this is useful to get some work done in a familiar way. 
 
+(defun measure-window (idx)
+  ; for the 0th and 1st measurements, we don't have enough data to create a window.
+  (if (<= idx 1)(+ 0 0)
+    ; for the second-to-last and last measurements, we also don't have enough data. 
+    (if (>= idx 1998)(+ 0 0)
+      ; measure the window
+      (+ 
+	(nth    idx    depth-measurements)
+	(nth (+ idx 1) depth-measurements)
+	(nth (+ idx 2) depth-measurements)))))
+
 (set 'loop-iterator 0)
+(set 'window-increase 0)
 (loop for measurement in depth-measurements do
-      (format T "~d :: ~d" loop-iterator measurement)(terpri)
-
-      ; TODO: Migrate to iter, so that we can use next-iteration, or
-      ; proper index support, or something that will dig me out of this hole.
-      ; skip at 0th, 1st, second-to-last, and last index. 
-      (if (eql loop-iterator 0)(format T "skip")())
-      (if (eql loop-iterator 1)(format T "skip")())
-      (if (eql loop-iterator 1998)(format T "skip")())
-      (if (eql loop-iterator 1999)(format T "skip")())
-
-      ; I'm looking backwards to compare the previous window, so I also want to skip
-      ; the 3rd index - it doesn't have a previous window to compare to. 
-      (if (eql loop-iterator 3)(format T "skip")())
-
-      ; I want this measurement, and the next two measurements. I can use position
-      ; to determine the location of this measurement in the list, but it would be
-      ; nice to use an iterator instead. Maybe if I have issues. 
-      (set 'this-window (+
-			  (nth      loop-iterator  depth-measurements)
-			  (nth (+ 1 loop-iterator) depth-measurements)
-			  (nth (+ 2 loop-iterator) depth-measurements)))
-
-      (set 'last-window (+
-			  (nth (- 1 loop-iterator) depth-measurements)
-			  (nth      loop-iterator  depth-measurements)
-			  (nth (+ 1 loop-iterator) depth-measurements)))
-      (write this-window)
-      (write last-window)
+      (set 'this-window (measure-window loop-iterator))
+      (set 'next-window (measure-window (+ loop-iterator 1)))
+      (if (> next-window this-window)
+	(progn
+	  ; (format T "~d > ~d" next-window this-window)(terpri)
+	  (set 'window-increase (+ 1 window-increase))))
 
       (set 'loop-iterator (+ 1 loop-iterator))
-
 )
+; TODO: this returns 1310 instead of the correct answer, 1311. why? skipping a measurement?
+(write window-increase)
 
 
 
