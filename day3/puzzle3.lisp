@@ -1,78 +1,46 @@
-(defvar first-bit-one-counter)
-(defvar secnd-bit-one-counter)
-(defvar third-bit-one-counter)
-(defvar forth-bit-one-counter)
-(defvar fifth-bit-one-counter)
-(defvar sixth-bit-one-counter)
-(defvar svnth-bit-one-counter)
-(defvar eigth-bit-one-counter)
-(defvar ninth-bit-one-counter)
-(defvar tenth-bit-one-counter)
-(defvar lvnth-bit-one-counter)
-(defvar twlth-bit-one-counter)
 (defvar total-input-lines)
-(set 'first-bit-one-counter 0)
-(set 'secnd-bit-one-counter 0)
-(set 'third-bit-one-counter 0)
-(set 'forth-bit-one-counter 0)
-(set 'fifth-bit-one-counter 0)
-(set 'sixth-bit-one-counter 0)
-(set 'svnth-bit-one-counter 0)
-(set 'eigth-bit-one-counter 0)
-(set 'ninth-bit-one-counter 0)
-(set 'tenth-bit-one-counter 0)
-(set 'lvnth-bit-one-counter 0)
-(set 'twlth-bit-one-counter 0)
 (set 'total-input-lines 0)
 
-(with-open-file (stream "puzzle3.input")
-  (loop for line = (read-line stream nil)
-	while line
-	collect
+; get the length of the first input value, to figure out how many variables we need
+; (length "asdf")
+; for char in line
+;   ; 
+;   (incf (nth result index) (parse-integer char))
+;   increment index
+; Create a list with 12 zeroes, where we will track the count of ones. 
+(defvar result-array)
+(set 'result-array (make-array '(12)))
+
+; this iterates through each byte of the file, rather than each line like I've
+; been doing. 
+(with-open-file (stream "puzzle3.input" :element-type '(unsigned-byte 8))
+  (let ((char-iterator 0))
+    (loop for b = (read-byte stream nil)
+      while b
+      collect
 	(progn
-	  (set 'total-input-lines (+ 1 total-input-lines))
-	  (if (eql #\1 (char line 0))(set 'first-bit-one-counter (+ 1 first-bit-one-counter))())
-	  (if (eql #\1 (char line 1))(set 'secnd-bit-one-counter (+ 1 secnd-bit-one-counter))())
-	  (if (eql #\1 (char line 2))(set 'third-bit-one-counter (+ 1 third-bit-one-counter))())
-	  (if (eql #\1 (char line 3))(set 'forth-bit-one-counter (+ 1 forth-bit-one-counter))())
-	  (if (eql #\1 (char line 4))(set 'fifth-bit-one-counter (+ 1 fifth-bit-one-counter))())
-	  (if (eql #\1 (char line 5))(set 'sixth-bit-one-counter (+ 1 sixth-bit-one-counter))())
-	  (if (eql #\1 (char line 6))(set 'svnth-bit-one-counter (+ 1 svnth-bit-one-counter))())
-	  (if (eql #\1 (char line 7))(set 'eigth-bit-one-counter (+ 1 eigth-bit-one-counter))())
-	  (if (eql #\1 (char line 8))(set 'ninth-bit-one-counter (+ 1 ninth-bit-one-counter))())
-	  (if (eql #\1 (char line 9))(set 'tenth-bit-one-counter (+ 1 tenth-bit-one-counter))())
-	  (if (eql #\1 (char line 10))(set 'lvnth-bit-one-counter (+ 1 lvnth-bit-one-counter))())
-	  (if (eql #\1 (char line 11))(set 'twlth-bit-one-counter (+ 1 twlth-bit-one-counter))()))))
+	  ; if the byte is ascii 1, increment the appropriate index in the array. 
+	  (if (eq b 49)(incf (aref result-array char-iterator))())
+	  ; we don't need to do anything for ascii 0 - we can figure out if there
+	  ; are more zeroes than ones, based on the number of ones and total lines.
 
-(write first-bit-one-counter)(terpri)
-(write secnd-bit-one-counter)(terpri)
-(write third-bit-one-counter)(terpri)
-(write forth-bit-one-counter)(terpri)
-(write fifth-bit-one-counter)(terpri)
-(write sixth-bit-one-counter)(terpri)
-(write svnth-bit-one-counter)(terpri)
-(write eigth-bit-one-counter)(terpri)
-(write ninth-bit-one-counter)(terpri)
-(write tenth-bit-one-counter)(terpri)
-(write lvnth-bit-one-counter)(terpri)
-(write twlth-bit-one-counter)(terpri)
+	  ; next byte, next index in the array. 
+	  (incf char-iterator)
+	  ; if we've reached the end of the string (ascii \n), reset. 
+	  (if (eq b 10)
+	    (progn
+	      (setf char-iterator 0)
+	      (set 'total-input-lines (+ total-input-lines 1)))())))))
 
-(format T "gamma rate (decimal) :: ")
-(if (> first-bit-one-counter (/ total-input-lines 2))(write 1)(write 0))
-(if (> secnd-bit-one-counter (/ total-input-lines 2))(write 1)(write 0))
-(if (> third-bit-one-counter (/ total-input-lines 2))(write 1)(write 0))
-(if (> forth-bit-one-counter (/ total-input-lines 2))(write 1)(write 0))
-(if (> fifth-bit-one-counter (/ total-input-lines 2))(write 1)(write 0))
-(if (> sixth-bit-one-counter (/ total-input-lines 2))(write 1)(write 0))
-(if (> svnth-bit-one-counter (/ total-input-lines 2))(write 1)(write 0))
-(if (> eigth-bit-one-counter (/ total-input-lines 2))(write 1)(write 0))
-(if (> ninth-bit-one-counter (/ total-input-lines 2))(write 1)(write 0))
-(if (> tenth-bit-one-counter (/ total-input-lines 2))(write 1)(write 0))
-(if (> lvnth-bit-one-counter (/ total-input-lines 2))(write 1)(write 0))
-(if (> twlth-bit-one-counter (/ total-input-lines 2))(write 1)(write 0))
-(terpri)
+(format T "gamma rate (binary)   :: ")
+(loop for i from 0 upto 11
+      collect
+      (if (> (aref result-array i) 500)(write 1)(write 0)))(terpri)
 
-(format T "epsilon rate (decimal) is inverse of gamma rate.")(terpri)
+(format T "epsilon rate (binary) :: ")
+(loop for i from 0 upto 11
+      collect
+      (if (> (aref result-array i) 500)(write 0)(write 1)))(terpri)
 
 ; I manually converted these to decimal to multiply them.
 (write (* 1836 2259))
