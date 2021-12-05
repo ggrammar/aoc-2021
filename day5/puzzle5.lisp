@@ -1,11 +1,11 @@
 (require "asdf")
 
-
 (defvar ocean-map)
 (set 'ocean-map (make-array '(1000 1000) :initial-element 0))
 
 (defvar steam-vents)
 (set 'steam-vents ())
+
 
 (with-open-file (stream "puzzle5.input")
   (loop for line = (read-line stream nil)
@@ -13,65 +13,85 @@
 	collect 
 	(set 'steam-vents (append steam-vents (list (uiop:split-string line :separator " "))))))
 
-; only needs to consider horizontal and vertical lines for now
+
+(defun mark-map-location (x y)
+     ; ocean-map is a AxB array. my intuition for accessing map coordinate 
+     ; (x, y), where x is the horizontal coordinate and y is the vertical
+     ; coordinate, is to (aref ocean-map x y). 
+     ; but, that's backwards! (aref ocean-map x) accesses a certain _row_ in
+     ; the array, which in my mental spreadsheet of (x, y) coordinates is
+     ; actually the vertical coordinate. so, we need to call (aref) backwards
+     ; from what my intuition suggests.
+     ; this doesn't actually affect anything for the solution - ocean-map is 
+     ; just rotated if you (aref ocean-map x y) - but it helps if you need to 
+     ; print the map and see what's going on. 
+     (incf (aref ocean-map y x)))
+
+
 (defun mark-steam-vent-on-map (steam-vent)
+  ; should probably break this out into a function or a class
   (let ((start-x (parse-integer (nth 0 (uiop:split-string (nth 0 steam-vent) :separator ","))))
 	(start-y (parse-integer (nth 1 (uiop:split-string (nth 0 steam-vent) :separator ","))))
 	(end-x   (parse-integer (nth 0 (uiop:split-string (nth 2 steam-vent) :separator ","))))
 	(end-y   (parse-integer (nth 1 (uiop:split-string (nth 2 steam-vent) :separator ",")))))
-    ; if start-loc x != end-loc x AND start-loc y != end-loc y, do nothing, diagonal line. 
-    (if (and
-	     (not (equal start-x end-x))
-	     (not (equal start-y end-y)))
-      ; mark diagonals
+
+    ; We process diagonal lines differently than horizontal/vertical lines. 
+    ; If x stays the same, it's horizontal. If y stays the same, it's vertical. 
+    ; Otherwise (if both change), it's diagonal. 
+    (if (or
+	  (equal start-x end-x)
+	  (equal start-y end-y))
+
+      ; mark verticals and horizontals
+      (progn
+	; (format T "mapping ~s ..." steam-vent)
+	; (format T "~d,~d -> ~d,~d" start-x start-y end-x end-y)
+
+	; Here, we run loops both up and down, to catch the cases when x is
+	; increasing/decreasing, or y is increasing/decreasing. As far as I
+	; can tell, CL doesn't have a way to loop in either direction (inc or
+	; dec), so we just run both. The loop that runs in the wrong direction
+	; just won't be executed. 
+	(if (equal start-x end-x)
+	  ; x is the same, so loop on y
+	  (progn
+	    (loop for y from end-y to start-y
+		  do (mark-map-location start-x y))
+	    (loop for y from start-y to end-y
+		  do (mark-map-location start-x y)))
+	  ; y is the same, so loop on x
+	  (progn
+	    (loop for x from end-x to start-x
+		  do (mark-map-location x start-y))
+	    (loop for x from start-x to end-x
+		  do (mark-map-location x start-y)))))
+
+      ; Both x and y changed, so this is a diagonal line. 
       (progn 
-	(format T "mapping diagonal ~s ..." steam-vent)
+	; (format T "mapping diagonal ~s ..." steam-vent)
 	(let ((vent-distance (abs (- start-x end-x))))
-	  (format T "distance is ~d" vent-distance)
+	  ; (format T "distance is ~d" vent-distance)
 	  (loop for i from 0 upto vent-distance
 		do (cond
 		     ; if x is increasing and y is increasing
 		     ((and (> end-x start-x)(> end-y start-y))
-		      (incf (aref ocean-map (+ start-y i)(+ start-x i))))
+		      (mark-map-location (+ start-x i)(+ start-y i)))
 		     ; if x is increasing and y is decreasing
 		     ((and (> end-x start-x)(< end-y start-y))
-		      (incf (aref ocean-map (- start-y i)(+ start-x i))))
+		      (mark-map-location (+ start-x i)(- start-y i)))
 		     ; if x is decreasing and y is increasing
 		     ((and (< end-x start-x)(> end-y start-y))
-		      (incf (aref ocean-map (+ start-y i)(- start-x i))))
+		      (mark-map-location (- start-x i)(+ start-y i)))
 		     ; if x is decreasing and y is decreasing
 		     ((and (< end-x start-x)(< end-y start-y))
-		      (incf (aref ocean-map (- start-y i)(- start-x i))))))))
-		     
+		      (mark-map-location (- start-x i)(- start-y i))))))))))
 
 
-      ; else, mark the line on the map
-      (progn
-	(format T "mapping ~s ..." steam-vent)
-	(format T "~d,~d -> ~d,~d" start-x start-y end-x end-y)
-
-	; if x remains the same, we need to iterate on y to adjust the map
-	(if (equal start-x end-x)
-	  ; loop up and down - lisp won't know which direction to go until 
-	  ; runtime, so we just do both. the loop that goes in the wrong
-	  ; direction will not be executed. 
-	  (progn
-	    (loop for y from end-y to start-y
-		  do (incf (aref ocean-map y start-x)))
-	    (loop for y from start-y to end-y
-		  do (incf (aref ocean-map y start-x))))
-	  ; y is the same, so loop on x
-	  (progn
-	    (loop for x from end-x to start-x
-		  do (incf (aref ocean-map start-y x)))
-	    (loop for x from start-x to end-x
-		  do (incf (aref ocean-map start-y x)))))))
-    (terpri)))
-
-
+; mark all of our steam vents
 (loop for steam-vent in steam-vents
       do (mark-steam-vent-on-map steam-vent))
 
+; count locations with 2 or more vents (> count 1)
 (let ((answer 0))
   (loop for x from 0 upto 999
       do (loop for y from 0 upto 999
@@ -80,5 +100,3 @@
 		 (incf answer))))
   (print answer))
 
-
-; (print ocean-map)
