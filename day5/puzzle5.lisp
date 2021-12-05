@@ -32,13 +32,16 @@
 
 	; if x remains the same, we need to iterate on y to adjust the map
 	(if (equal start-x end-x)
-	  (if (> start-y end-y)
+	  ; loop up and down - lisp won't know which direction to go until 
+	  ; runtime, so we just do both. the loop that goes in the wrong
+	  ; direction will not be executed. 
+	  (progn
 	    (loop for y from end-y to start-y
 		  do (incf (aref ocean-map y start-x)))
 	    (loop for y from start-y to end-y
 		  do (incf (aref ocean-map y start-x))))
 	  ; y is the same, so loop on x
-	  (if (> start-x end-x)
+	  (progn
 	    (loop for x from end-x to start-x
 		  do (incf (aref ocean-map start-y x)))
 	    (loop for x from start-x to end-x
