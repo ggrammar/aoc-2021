@@ -23,8 +23,28 @@
     (if (and
 	     (not (equal start-x end-x))
 	     (not (equal start-y end-y)))
-      ; skip if the line is on a diagonal
-      (format T "steam-vent ~s is on a diagonal, skipping" steam-vent)
+      ; mark diagonals
+      (progn 
+	(format T "mapping diagonal ~s ..." steam-vent)
+	(let ((vent-distance (abs (- start-x end-x))))
+	  (format T "distance is ~d" vent-distance)
+	  (loop for i from 0 upto vent-distance
+		do (cond
+		     ; if x is increasing and y is increasing
+		     ((and (> end-x start-x)(> end-y start-y))
+		      (incf (aref ocean-map (+ start-y i)(+ start-x i))))
+		     ; if x is increasing and y is decreasing
+		     ((and (> end-x start-x)(< end-y start-y))
+		      (incf (aref ocean-map (- start-y i)(+ start-x i))))
+		     ; if x is decreasing and y is increasing
+		     ((and (< end-x start-x)(> end-y start-y))
+		      (incf (aref ocean-map (+ start-y i)(- start-x i))))
+		     ; if x is decreasing and y is decreasing
+		     ((and (< end-x start-x)(< end-y start-y))
+		      (incf (aref ocean-map (- start-y i)(- start-x i))))))))
+		     
+
+
       ; else, mark the line on the map
       (progn
 	(format T "mapping ~s ..." steam-vent)
