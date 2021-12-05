@@ -15,17 +15,19 @@
 
 
 (defun mark-map-location (x y)
-     ; ocean-map is a AxB array. my intuition for accessing map coordinate 
-     ; (x, y), where x is the horizontal coordinate and y is the vertical
-     ; coordinate, is to (aref ocean-map x y). 
-     ; but, that's backwards! (aref ocean-map x) accesses a certain _row_ in
-     ; the array, which in my mental spreadsheet of (x, y) coordinates is
-     ; actually the vertical coordinate. so, we need to call (aref) backwards
-     ; from what my intuition suggests.
-     ; this doesn't actually affect anything for the solution - ocean-map is 
-     ; just rotated if you (aref ocean-map x y) - but it helps if you need to 
-     ; print the map and see what's going on. 
-     (incf (aref ocean-map y x)))
+  (declare (number x y)) ; function declaration, say what our inputs should be
+  "Update ocena-map to add the location of (part of) a steam vent."
+  ; ocean-map is a AxB array. my intuition for accessing map coordinate 
+  ; (x, y), where x is the horizontal coordinate and y is the vertical
+  ; coordinate, is to (aref ocean-map x y). 
+  ; but, that's backwards! (aref ocean-map x) accesses a certain _row_ in
+  ; the array, which in my mental spreadsheet of (x, y) coordinates is
+  ; actually the vertical coordinate. so, we need to call (aref) backwards
+  ; from what my intuition suggests.
+  ; this doesn't actually affect anything for the solution - ocean-map is 
+  ; just rotated if you (aref ocean-map x y) - but it helps if you need to 
+  ; print the map and see what's going on. 
+  (incf (aref ocean-map y x)))
 
 
 (defun mark-steam-vent-on-map (steam-vent)
@@ -80,9 +82,14 @@
 			   (mark-map-location (- start-x i)(- start-y i)))))))))))
 
 
-; mark all of our steam vents
-(loop for steam-vent in steam-vents
-      do (mark-steam-vent-on-map steam-vent))
+; This is the first time I've successfully used a map, so here's how it works:
+; (map nil ; nil is the "result-type". We don't actually return anything from
+;   this map, so set this to nil. 
+; (lambda (x)(func x)) ; this is the "function designator", which is applied to
+;   the sequence. the function must take as many arguments as there are 
+;   sequences, for cases when we want to use multiple sequences.
+; steam-vents ; this is our sequence. 
+(map nil (lambda (x) (mark-steam-vent-on-map x)) steam-vents)
 
 ; count locations with 2 or more vents (> count 1)
 (let ((answer 0))
