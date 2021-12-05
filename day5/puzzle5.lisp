@@ -38,53 +38,46 @@
     ; We process diagonal lines differently than horizontal/vertical lines. 
     ; If x stays the same, it's horizontal. If y stays the same, it's vertical. 
     ; Otherwise (if both change), it's diagonal. 
-    (if (or
-	  (equal start-x end-x)
-	  (equal start-y end-y))
 
-      ; mark verticals and horizontals
-      (progn
-	; (format T "mapping ~s ..." steam-vent)
-	; (format T "~d,~d -> ~d,~d" start-x start-y end-x end-y)
+    ; For horiz/vert, we run loops both up and down, to catch the cases when x is
+    ; increasing/decreasing, or y is increasing/decreasing. As far as I
+    ; can tell, CL doesn't have a way to loop in either direction (inc or
+    ; dec), so we just run both. The loop that runs in the wrong direction
+    ; just won't be executed. 
 
-	; Here, we run loops both up and down, to catch the cases when x is
-	; increasing/decreasing, or y is increasing/decreasing. As far as I
-	; can tell, CL doesn't have a way to loop in either direction (inc or
-	; dec), so we just run both. The loop that runs in the wrong direction
-	; just won't be executed. 
-	(if (equal start-x end-x)
-	  ; x is the same, so loop on y
-	  (progn
+          ; x is the same, mark all y values
+    (cond ((equal start-x end-x)
 	    (loop for y from end-y to start-y
 		  do (mark-map-location start-x y))
 	    (loop for y from start-y to end-y
 		  do (mark-map-location start-x y)))
-	  ; y is the same, so loop on x
-	  (progn
+          ; y is the same, mark all x values
+	  ((equal start-y end-y)
 	    (loop for x from end-x to start-x
 		  do (mark-map-location x start-y))
 	    (loop for x from start-x to end-x
-		  do (mark-map-location x start-y)))))
-
-      ; Both x and y changed, so this is a diagonal line. 
-      (progn 
-	; (format T "mapping diagonal ~s ..." steam-vent)
-	(let ((vent-distance (abs (- start-x end-x))))
-	  ; (format T "distance is ~d" vent-distance)
-	  (loop for i from 0 upto vent-distance
-		do (cond
-		     ; if x is increasing and y is increasing
-		     ((and (> end-x start-x)(> end-y start-y))
-		      (mark-map-location (+ start-x i)(+ start-y i)))
-		     ; if x is increasing and y is decreasing
-		     ((and (> end-x start-x)(< end-y start-y))
-		      (mark-map-location (+ start-x i)(- start-y i)))
-		     ; if x is decreasing and y is increasing
-		     ((and (< end-x start-x)(> end-y start-y))
-		      (mark-map-location (- start-x i)(+ start-y i)))
-		     ; if x is decreasing and y is decreasing
-		     ((and (< end-x start-x)(< end-y start-y))
-		      (mark-map-location (- start-x i)(- start-y i))))))))))
+		  do (mark-map-location x start-y)))
+          ; diagonal - all other lines, so (cond ((eval t)) ())
+	  ((eval t)
+	   ; Both x and y changed, so this is a diagonal line. 
+	   (progn 
+	     ; (format T "mapping diagonal ~s ..." steam-vent)
+	     (let ((vent-distance (abs (- start-x end-x))))
+	       ; (format T "distance is ~d" vent-distance)
+	       (loop for i from 0 upto vent-distance
+		     do (cond
+			  ; if x is increasing and y is increasing
+			  ((and (> end-x start-x)(> end-y start-y))
+			   (mark-map-location (+ start-x i)(+ start-y i)))
+			  ; if x is increasing and y is decreasing
+			  ((and (> end-x start-x)(< end-y start-y))
+			   (mark-map-location (+ start-x i)(- start-y i)))
+			  ; if x is decreasing and y is increasing
+			  ((and (< end-x start-x)(> end-y start-y))
+			   (mark-map-location (- start-x i)(+ start-y i)))
+			  ; if x is decreasing and y is decreasing
+			  ((and (< end-x start-x)(< end-y start-y))
+			   (mark-map-location (- start-x i)(- start-y i)))))))))))
 
 
 ; mark all of our steam vents
