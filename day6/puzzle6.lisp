@@ -1,3 +1,6 @@
+; needs to be run with `--control-stack-size 5` to increase the control stack size,
+; otherwise it bails around day 75. 
+
 (require "asdf")
 
 (defvar fish)
