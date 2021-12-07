@@ -20,10 +20,13 @@
 
 (defun calculate-move-cost (start finish)
   (declare (number start finish))
-  (abs (- start finish)))
+  ; Calculation for part 1 - just distance b/t start and finish
+  ; (abs (- start finish))
+  ; Calculation for part 2 - increasing fuel costs
+  (apply '+ (loop for i from 1 to (abs (- start finish)) collect i)))
 
 ; brute force
 (print (nth 0 (sort
   (loop for i from 0 to 2000 collect
-	(apply '+ (map 'list (lambda (x) (calculate-move-cost i x)) puzzle-input)))
+(apply '+ (map 'list (lambda (x) (calculate-move-cost i x)) puzzle-input)))
   '<)))
