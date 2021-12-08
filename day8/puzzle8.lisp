@@ -43,6 +43,7 @@
 (terpri)
 
 (defun num-signals-present (sig-1 sig-2)
+  (declare (string sig-1 sig-2))
   (loop for i from 0 upto (- (length sig-1) 1) count
 	(find (char sig-1 i) sig-2)))
 
@@ -70,7 +71,7 @@
 	  ; signal length 6 might be 0, 6, or 9
 	  ((equal (length sig) 6)
 	   ; 9 shares four signals with 4
-	   (cond ((equal 4 (num-signals-present sig sig-four))(eval 4))
+	   (cond ((equal 4 (num-signals-present sig sig-four))(eval 9))
 		 ; 6 shares one with 1
 		 ((equal 1 (num-signals-present sig sig-one))(eval 6))
 		 ((equal t t)(eval 0)))))))
