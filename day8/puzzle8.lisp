@@ -74,6 +74,7 @@
 	   (cond ((equal 4 (num-signals-present sig sig-four))(eval 9))
 		 ; 6 shares one with 1
 		 ((equal 1 (num-signals-present sig sig-one))(eval 6))
+		 ; all other signals must be 0
 		 ((equal t t)(eval 0)))))))
 
 ; need something that accepts an output list and returns a number
