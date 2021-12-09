@@ -11,9 +11,9 @@
 
   (let ((number-of-zeroes (length (remove-if (lambda (x) (equal (aref x n) #\1)) l)))
 	(half-of-list (/ (length l) 2)))
-    (cond ((> number-of-zeroes half-of-list)(eval #\0))
-	  ((< number-of-zeroes half-of-list)(eval #\1))
-	  ((= number-of-zeroes half-of-list)(eval default)))))
+    (cond ((> number-of-zeroes half-of-list) '#\0 )
+	  ((< number-of-zeroes half-of-list) '#\1 )
+	  ((= number-of-zeroes half-of-list) default ))))
 
 ; part 1 - print these out and manually reverse
 ; (loop for i from 0 upto 11 do (print (get-popular-at-n puzzle-input i #\1)))
