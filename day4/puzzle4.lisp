@@ -18,17 +18,15 @@
   (let ((bingo-row-iterator 0))
     (loop for bingo-number in (uiop:split-string line :separator " ")
 	  do
-
-		   ; TODO: in our input, single-digit numbers are preceded by 
-		   ; two spaces, rather than one. There's the delimiting space,
-		   ; and the space where a number in the tens column would be.
-		   ; I'm sure there's a better way to handle this but, for now,
-		   ; we will just skip when bingo-number is an empty string.
+	   ; TODO: in our input, single-digit numbers are preceded by 
+	   ; two spaces, rather than one. There's the delimiting space,
+	   ; and the space where a number in the tens column would be.
+	   ; I'm sure there's a better way to handle this but, for now,
+	   ; we will just skip when bingo-number is an empty string.
 	  (if (equal bingo-number "")() ;skip mis-parsed space
 	    (progn
 	      (setf (aref bingo-table bingo-table-row-index bingo-row-iterator) bingo-number)
 	      (incf bingo-row-iterator))))))
-	    
 
 
 (with-open-file (stream "puzzle4.input")
@@ -93,12 +91,14 @@
     (bingo-table-row-is-solved bingo-table)
     (bingo-table-column-is-solved bingo-table)))
 
+
 (defun cross-out-bingo-table-input (bingo-table input)
   (loop for row from 0 upto 4
 	do (loop for column from 0 upto 4
 		 do (if (equal (aref bingo-table row column) input)
 		      (setf (aref bingo-table row column) "x")
 		      ()))))
+
 
 (defun score-bingo-table (bingo-table)
   (let ((sum 0))
@@ -110,26 +110,65 @@
 		     (incf sum (parse-integer (aref bingo-table row column))))))
     (eval sum)))
   
-		
 
 (defvar first-winner)
 (set 'first-winner ())
 (loop for bingo-input in bingo-inputs
+      until (not (equal first-winner ()))
       do
       ; cross out this input on each bingo table
-      (terpri)(terpri)
       (loop for bingo-table-index from 0 upto (- (length bingo-tables) 1)
 	    do
 	    (let ((bingo-table (aref bingo-tables bingo-table-index)))
 	      (cross-out-bingo-table-input bingo-table bingo-input)))
 
-      ; check to see if there are any winners
+      ; check to see if there are any winners for part 1
       (loop for bingo-table-index from 0 upto (- (length bingo-tables) 1)
 	    do
 	    (let ((bingo-table (aref bingo-tables bingo-table-index)))
 	      (if (bingo-table-is-solved bingo-table)
-		(print (* (score-bingo-table bingo-table) (parse-integer bingo-input)))
+		(set 'first-winner bingo-table)
 		()))))
+
+(print first-winner)
+
+
+(defvar last-winner)
+(set 'last-winner (make-array '(5 5) :initial-element 5))
+; find the last winner
+(let ((tmp-bingo-tables bingo-tables))
+  (loop for bingo-input in bingo-inputs
+	until (bingo-table-is-solved last-winner)
+	do
+        (print (length tmp-bingo-tables))
+	(print bingo-input)
+
+	; cross out this input on each bingo table
+	(loop for bingo-table-index from 0 upto (- (length tmp-bingo-tables) 1)
+	      do
+	      (let ((bingo-table (aref tmp-bingo-tables bingo-table-index)))
+		(cross-out-bingo-table-input bingo-table bingo-input)))
+
+	(setf tmp-bingo-tables (remove-if (lambda (x) (bingo-table-is-solved x)) tmp-bingo-tables))
+
+	(if (equal (length tmp-bingo-tables) 1)(set 'last-winner (aref tmp-bingo-tables 0))())
+	(if last-winner (progn
+			  (cross-out-bingo-table-input last-winner bingo-input)
+			  (if (bingo-table-is-solved last-winner)
+			    (print (* (score-bingo-table last-winner) (parse-integer bingo-input)))
+			    ())))))
+
+	; need to figure out what the score of the board is *once it wins*
+
+
+
+
+
+
+
+
+
+
 
 
 
